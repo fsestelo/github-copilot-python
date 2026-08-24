@@ -1,13 +1,16 @@
-import copy
 import random
 
+from sudoku.board import create_empty_board as _create_empty_board
+from sudoku.board import deep_copy as _deep_copy
 from sudoku.constants import EMPTY, SIZE
 
+
 def deep_copy(board):
-    return copy.deepcopy(board)
+    return _deep_copy(board)
+
 
 def create_empty_board():
-    return [[EMPTY for _ in range(SIZE)] for _ in range(SIZE)]
+    return _create_empty_board()
 
 def is_safe(board, row, col, num):
     # Check row and column
