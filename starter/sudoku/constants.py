@@ -1,0 +1,2 @@
+SIZE = 9
+EMPTY = 0

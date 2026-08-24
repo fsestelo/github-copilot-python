@@ -1,8 +1,7 @@
 import copy
 import random
 
-SIZE = 9
-EMPTY = 0
+from sudoku.constants import EMPTY, SIZE
 
 def deep_copy(board):
     return copy.deepcopy(board)
