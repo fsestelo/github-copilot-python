@@ -1,6 +1,7 @@
 import random
 
 import sudoku_logic
+from sudoku.solver import count_solutions
 
 
 def assert_valid_solution(board):
@@ -78,3 +79,34 @@ def test_generate_puzzle_returns_valid_solution_and_requested_clues():
         for row in range(sudoku_logic.SIZE)
         for column in range(sudoku_logic.SIZE)
     )
+
+
+def test_count_solutions_on_solved_board_is_one():
+    board = sudoku_logic.create_empty_board()
+    assert sudoku_logic.fill_board(board) is True
+
+    assert count_solutions(board) == 1
+
+
+def test_count_solutions_on_unsolvable_board_is_zero():
+    board = sudoku_logic.create_empty_board()
+    board[0][0] = 1
+    board[0][1] = 1
+
+    assert count_solutions(board) == 0
+
+
+def test_count_solutions_on_multiple_solution_board_is_two():
+    board = sudoku_logic.create_empty_board()
+    board[0][0] = 1
+
+    assert count_solutions(board) == 2
+
+
+def test_generated_puzzle_has_exactly_one_solution():
+    random.seed(7)
+    puzzle, solution = sudoku_logic.generate_puzzle(clues=30)
+
+    assert_valid_solution(solution)
+    assert count_solutions(puzzle) == 1
+    assert sum(cell != sudoku_logic.EMPTY for row in puzzle for cell in row) == 30
