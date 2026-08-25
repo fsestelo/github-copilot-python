@@ -30,7 +30,7 @@ def test_new_game_returns_puzzle_and_stores_solution(client, monkeypatch):
         assert clues == 40
         return puzzle, solution
 
-    monkeypatch.setattr(app.sudoku_logic, "generate_puzzle", fake_generate_puzzle)
+    monkeypatch.setattr(app.generator, "generate_puzzle", fake_generate_puzzle)
 
     response = client.get("/new?clues=40")
 

@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 
-import sudoku_logic
+from sudoku import generator
 from sudoku.service import SudokuGameService
 
 app = Flask(__name__)
@@ -11,7 +11,7 @@ CURRENT = {
     'solution': None
 }
 
-service = SudokuGameService(sudoku_logic)
+service = SudokuGameService(generator)
 
 
 @app.route('/')
