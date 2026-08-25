@@ -2,6 +2,33 @@
 const SIZE = 9;
 let puzzle = [];
 let hintsUsed = 0;
+let timerInterval = null;
+let startedAt = null;
+
+function formatElapsedTime(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function updateTimer() {
+  if (startedAt === null) return;
+  const elapsedSeconds = Math.max(0, Math.floor(Date.now() / 1000) - startedAt);
+  document.getElementById('timer').innerText = formatElapsedTime(elapsedSeconds);
+}
+
+function startTimer(gameStartedAt) {
+  clearInterval(timerInterval);
+  startedAt = gameStartedAt;
+  updateTimer();
+  timerInterval = setInterval(updateTimer, 1000);
+}
+
+function stopTimer(finalElapsedSeconds) {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  document.getElementById('timer').innerText = formatElapsedTime(finalElapsedSeconds);
+}
 
 function createBoardElement() {
   const boardDiv = document.getElementById('sudoku-board');
@@ -54,6 +81,7 @@ async function newGame() {
   const res = await fetch(`/new?difficulty=${encodeURIComponent(difficulty)}`);
   const data = await res.json();
   renderPuzzle(data.puzzle);
+  startTimer(data.started_at);
   document.getElementById('message').innerText = '';
 }
 
@@ -83,6 +111,9 @@ async function checkSolution() {
     }
   }
   if (incorrect.size === 0) {
+    if (data.final_elapsed_seconds !== undefined) {
+      stopTimer(data.final_elapsed_seconds);
+    }
     msg.style.color = '#388e3c';
     msg.innerText = 'Congratulations! You solved it!';
   } else {

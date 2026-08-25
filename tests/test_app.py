@@ -8,12 +8,16 @@ from sudoku.constants import SIZE
 def client():
     app.CURRENT["puzzle"] = None
     app.CURRENT["solution"] = None
+    app.CURRENT["started_at"] = None
+    app.CURRENT["final_elapsed_seconds"] = None
     app.app.config.update(TESTING=True)
     with app.app.test_client() as test_client:
         yield test_client
     app.CURRENT["puzzle"] = None
     app.CURRENT["solution"] = None
     app.CURRENT["hints_used"] = 0
+    app.CURRENT["started_at"] = None
+    app.CURRENT["final_elapsed_seconds"] = None
 
 
 def test_index_renders_game_page(client):
@@ -37,15 +41,18 @@ def test_new_game_returns_puzzle_and_stores_solution(client, monkeypatch):
         return puzzle, solution
 
     monkeypatch.setattr(app.generator, "generate_puzzle", fake_generate_puzzle)
+    monkeypatch.setattr(app.time, "time", lambda: 1000)
 
     response = client.get("/new?clues=40")
 
     assert response.status_code == 200
-    assert response.json == {"puzzle": puzzle}
+    assert response.json == {"puzzle": puzzle, "started_at": 1000}
     assert app.CURRENT == {
         "puzzle": puzzle,
         "solution": solution,
         "hints_used": 0,
+        "started_at": 1000,
+        "final_elapsed_seconds": None,
     }
 
 
@@ -71,7 +78,8 @@ def test_new_game_accepts_difficulty_level(client, monkeypatch, difficulty, clue
     response = client.get(f"/new?difficulty={difficulty}")
 
     assert response.status_code == 200
-    assert response.json == {"puzzle": puzzle}
+    assert response.json["puzzle"] == puzzle
+    assert isinstance(response.json["started_at"], int)
 
 
 def test_new_game_rejects_invalid_difficulty(client):
@@ -93,11 +101,40 @@ def test_check_solution_reports_coordinates_that_differ(client):
     board = [row[:] for row in solution]
     board[0][1] = 2
     app.CURRENT["solution"] = solution
+    app.CURRENT["started_at"] = 1000
 
     response = client.post("/check", json={"board": board})
 
     assert response.status_code == 200
     assert response.json == {"incorrect": [[0, 1]]}
+    assert app.CURRENT["final_elapsed_seconds"] is None
+
+
+def test_check_solution_stores_and_returns_authoritative_elapsed_time(client, monkeypatch):
+    solution = [[1] * SIZE for _ in range(SIZE)]
+    app.CURRENT["solution"] = solution
+    app.CURRENT["started_at"] = 1000
+    board = [row[:] for row in solution]
+    monkeypatch.setattr(app.time, "time", lambda: 1123)
+
+    response = client.post("/check", json={"board": board})
+
+    assert response.status_code == 200
+    assert response.json == {"incorrect": [], "final_elapsed_seconds": 123}
+    assert app.CURRENT["final_elapsed_seconds"] == 123
+
+
+def test_check_solution_keeps_final_elapsed_time(client, monkeypatch):
+    solution = [[1] * SIZE for _ in range(SIZE)]
+    app.CURRENT["solution"] = solution
+    app.CURRENT["started_at"] = 1000
+    app.CURRENT["final_elapsed_seconds"] = 123
+    board = [row[:] for row in solution]
+    monkeypatch.setattr(app.time, "time", lambda: 1500)
+
+    response = client.post("/check", json={"board": board})
+
+    assert response.json == {"incorrect": [], "final_elapsed_seconds": 123}
 
 
 def test_check_solution_rejects_invalid_json(client):
