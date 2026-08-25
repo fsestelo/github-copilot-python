@@ -13,6 +13,7 @@ def client():
         yield test_client
     app.CURRENT["puzzle"] = None
     app.CURRENT["solution"] = None
+    app.CURRENT["hints_used"] = 0
 
 
 def test_index_renders_game_page(client):
@@ -41,7 +42,11 @@ def test_new_game_returns_puzzle_and_stores_solution(client, monkeypatch):
 
     assert response.status_code == 200
     assert response.json == {"puzzle": puzzle}
-    assert app.CURRENT == {"puzzle": puzzle, "solution": solution}
+    assert app.CURRENT == {
+        "puzzle": puzzle,
+        "solution": solution,
+        "hints_used": 0,
+    }
 
 
 @pytest.mark.parametrize("clues", ["abc", "0", "82"])

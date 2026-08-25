@@ -41,6 +41,20 @@ def test_check_board_returns_incorrect_coordinates():
     assert service.check_board(board, solution) == {'incorrect': [[0, 1]]}
 
 
+def test_get_hint_returns_only_one_empty_cell_and_tracks_usage():
+    service = SudokuGameService(FakeGenerator())
+    solution = [[1] * 9 for _ in range(9)]
+    board = [[1] * 9 for _ in range(9)]
+    board[0][0] = 0
+
+    assert service.get_hint(board, solution) == {
+        'row': 0,
+        'column': 0,
+        'value': 1,
+    }
+    assert service.hints_used == 1
+
+
 def test_check_board_rejects_missing_game():
     service = SudokuGameService(FakeGenerator())
 

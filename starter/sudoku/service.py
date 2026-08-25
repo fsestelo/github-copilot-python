@@ -5,6 +5,7 @@ class SudokuGameService:
     def __init__(self, generator, solver=None):
         self.generator = generator
         self.solver = solver
+        self.hints_used = 0
 
     def create_game(self, clues=None, difficulty='medium'):
         if clues is None:
@@ -16,14 +17,43 @@ class SudokuGameService:
             raise ValueError('Clues must be an integer between 1 and 81')
 
         puzzle, solution = self.generator.generate_puzzle(clues)
+        self.hints_used = 0
         return {
             'puzzle': puzzle,
             'solution': solution,
         }
 
+    def get_hint(self, board, solution):
+        if solution is None:
+            raise ValueError('No game in progress')
+        self._validate_board(board)
+
+        for row_index, row in enumerate(board):
+            for col_index, value in enumerate(row):
+                if value == 0:
+                    self.hints_used += 1
+                    return {
+                        'row': row_index,
+                        'column': col_index,
+                        'value': solution[row_index][col_index],
+                    }
+
+        raise ValueError('No empty cells remain')
+
     def check_board(self, board, solution):
         if solution is None:
             raise ValueError('No game in progress')
+        self._validate_board(board)
+
+        incorrect = []
+        for row_index in range(len(solution)):
+            for col_index in range(len(solution[row_index])):
+                if board[row_index][col_index] != solution[row_index][col_index]:
+                    incorrect.append([row_index, col_index])
+        return {'incorrect': incorrect}
+
+    @staticmethod
+    def _validate_board(board):
         if not isinstance(board, list) or len(board) != 9:
             raise ValueError('Board must be a 9x9 grid')
         if any(
@@ -33,10 +63,3 @@ class SudokuGameService:
             for row in board
         ):
             raise ValueError('Board must be a 9x9 grid with values from 0 to 9')
-
-        incorrect = []
-        for row_index in range(len(solution)):
-            for col_index in range(len(solution[row_index])):
-                if board[row_index][col_index] != solution[row_index][col_index]:
-                    incorrect.append([row_index, col_index])
-        return {'incorrect': incorrect}

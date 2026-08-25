@@ -8,7 +8,8 @@ app = Flask(__name__)
 # Keep a simple in-memory store for current puzzle and solution
 CURRENT = {
     'puzzle': None,
-    'solution': None
+    'solution': None,
+    'hints_used': 0,
 }
 
 service = SudokuGameService(generator)
@@ -33,7 +34,26 @@ def new_game():
         return jsonify({'error': message}), 400
     CURRENT['puzzle'] = game['puzzle']
     CURRENT['solution'] = game['solution']
+    CURRENT['hints_used'] = 0
     return jsonify({'puzzle': game['puzzle']})
+
+
+@app.route('/hint', methods=['POST'])
+def request_hint():
+    solution = CURRENT.get('solution')
+    if solution is None:
+        return jsonify({'error': 'No game in progress'}), 400
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or 'board' not in data:
+        return jsonify({'error': 'Request body must contain a board'}), 400
+
+    try:
+        hint = service.get_hint(data['board'], solution)
+    except ValueError as error:
+        return jsonify({'error': str(error)}), 400
+    CURRENT['hints_used'] = service.hints_used
+    return jsonify(hint)
 
 
 @app.route('/check', methods=['POST'])
