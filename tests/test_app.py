@@ -39,6 +39,14 @@ def test_new_game_returns_puzzle_and_stores_solution(client, monkeypatch):
     assert app.CURRENT == {"puzzle": puzzle, "solution": solution}
 
 
+@pytest.mark.parametrize("clues", ["abc", "0", "82"])
+def test_new_game_rejects_invalid_clues(client, clues):
+    response = client.get(f"/new?clues={clues}")
+
+    assert response.status_code == 400
+    assert response.json == {"error": "Clues must be an integer between 1 and 81"}
+
+
 def test_check_solution_reports_no_game_in_progress(client):
     response = client.post("/check", json={"board": []})
 
@@ -56,3 +64,43 @@ def test_check_solution_reports_coordinates_that_differ(client):
 
     assert response.status_code == 200
     assert response.json == {"incorrect": [[0, 1]]}
+
+
+def test_check_solution_rejects_invalid_json(client):
+    app.CURRENT["solution"] = [[1] * sudoku_logic.SIZE for _ in range(sudoku_logic.SIZE)]
+
+    response = client.post(
+        "/check",
+        data="{invalid",
+        content_type="application/json",
+    )
+
+    assert response.status_code == 400
+    assert response.json == {"error": "Request body must contain valid JSON"}
+
+
+def test_check_solution_rejects_missing_board(client):
+    app.CURRENT["solution"] = [[1] * sudoku_logic.SIZE for _ in range(sudoku_logic.SIZE)]
+
+    response = client.post("/check", json={})
+
+    assert response.status_code == 400
+    assert response.json == {"error": "Request body must contain a board"}
+
+
+@pytest.mark.parametrize(
+    "board",
+    [
+        [],
+        [[0] * sudoku_logic.SIZE for _ in range(8)],
+        [[0] * 8 for _ in range(sudoku_logic.SIZE)],
+        [[10] + [0] * 8] + [[0] * sudoku_logic.SIZE for _ in range(8)],
+    ],
+)
+def test_check_solution_rejects_invalid_board(client, board):
+    app.CURRENT["solution"] = [[1] * sudoku_logic.SIZE for _ in range(sudoku_logic.SIZE)]
+
+    response = client.post("/check", json={"board": board})
+
+    assert response.status_code == 400
+
