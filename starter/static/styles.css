@@ -124,6 +124,33 @@ button:hover {
     color: #333;
 }
 
+.scoreboard {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.scoreboard h2 {
+    color: #333;
+}
+
+.scoreboard table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.scoreboard th,
+.scoreboard td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.scoreboard th {
+    background: #e0e0e0;
+}
+
 @media (max-width: 760px) {
     .game-layout {
         grid-template-columns: 1fr;

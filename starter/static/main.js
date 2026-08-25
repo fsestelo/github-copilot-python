@@ -4,6 +4,7 @@ let puzzle = [];
 let hintsUsed = 0;
 let timerInterval = null;
 let startedAt = null;
+let scoreSaved = false;
 
 function formatElapsedTime(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -28,6 +29,34 @@ function stopTimer(finalElapsedSeconds) {
   clearInterval(timerInterval);
   timerInterval = null;
   document.getElementById('timer').innerText = formatElapsedTime(finalElapsedSeconds);
+}
+
+function renderScoreboard(scores) {
+  const body = document.getElementById('scoreboard-body');
+  body.innerHTML = '';
+  scores.forEach((score) => {
+    const row = document.createElement('tr');
+    [score.name, formatElapsedTime(score.time), score.difficulty, score.hints]
+      .forEach((value) => {
+        const cell = document.createElement('td');
+        cell.innerText = value;
+        row.appendChild(cell);
+      });
+    body.appendChild(row);
+  });
+}
+
+function saveCompletedGame(finalElapsedSeconds) {
+  if (scoreSaved) return;
+  scoreSaved = true;
+  const name = window.prompt('Enter your name for the Top 10 scoreboard:') || 'Anonymous';
+  const scores = Scoreboard.saveScore(window.localStorage, {
+    name: name.trim() || 'Anonymous',
+    time: finalElapsedSeconds,
+    difficulty: document.getElementById('difficulty').value,
+    hints: hintsUsed,
+  });
+  renderScoreboard(scores);
 }
 
 function createBoardElement() {
@@ -56,6 +85,7 @@ function createBoardElement() {
 function renderPuzzle(puz) {
   puzzle = puz;
   hintsUsed = 0;
+  scoreSaved = false;
   createBoardElement();
   const boardDiv = document.getElementById('sudoku-board');
   const inputs = boardDiv.getElementsByTagName('input');
@@ -113,6 +143,7 @@ async function checkSolution() {
   if (incorrect.size === 0) {
     if (data.final_elapsed_seconds !== undefined) {
       stopTimer(data.final_elapsed_seconds);
+      saveCompletedGame(data.final_elapsed_seconds);
     }
     msg.style.color = '#388e3c';
     msg.innerText = 'Congratulations! You solved it!';
@@ -163,6 +194,7 @@ window.addEventListener('load', () => {
   document.getElementById('new-game').addEventListener('click', newGame);
   document.getElementById('hint').addEventListener('click', requestHint);
   document.getElementById('check-solution').addEventListener('click', checkSolution);
+  renderScoreboard(Scoreboard.loadScores(window.localStorage));
   // initialize
   newGame();
 });
