@@ -19,7 +19,12 @@ def test_index_renders_game_page(client):
     response = client.get("/")
 
     assert response.status_code == 200
-    assert "Sudoku" in response.get_data(as_text=True)
+    page = response.get_data(as_text=True)
+    assert "Sudoku" in page
+    assert 'id="difficulty"' in page
+    assert 'value="easy"' in page
+    assert 'value="medium"' in page
+    assert 'value="hard"' in page
 
 
 def test_new_game_returns_puzzle_and_stores_solution(client, monkeypatch):
@@ -45,6 +50,30 @@ def test_new_game_rejects_invalid_clues(client, clues):
 
     assert response.status_code == 400
     assert response.json == {"error": "Clues must be an integer between 1 and 81"}
+
+
+@pytest.mark.parametrize("difficulty, clues", [("easy", 45), ("medium", 35), ("hard", 28)])
+def test_new_game_accepts_difficulty_level(client, monkeypatch, difficulty, clues):
+    puzzle = [[0] * SIZE for _ in range(SIZE)]
+    solution = [[1] * SIZE for _ in range(SIZE)]
+
+    def fake_generate_puzzle(received_clues):
+        assert received_clues == clues
+        return puzzle, solution
+
+    monkeypatch.setattr(app.generator, "generate_puzzle", fake_generate_puzzle)
+
+    response = client.get(f"/new?difficulty={difficulty}")
+
+    assert response.status_code == 200
+    assert response.json == {"puzzle": puzzle}
+
+
+def test_new_game_rejects_invalid_difficulty(client):
+    response = client.get("/new?difficulty=expert")
+
+    assert response.status_code == 400
+    assert response.json == {"error": "Difficulty must be easy, medium, or hard"}
 
 
 def test_check_solution_reports_no_game_in_progress(client):

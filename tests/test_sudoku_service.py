@@ -1,5 +1,6 @@
 import pytest
 
+from sudoku.constants import DIFFICULTY_CLUES
 from sudoku.service import SudokuGameService
 
 
@@ -17,6 +18,18 @@ def test_create_game_returns_current_puzzle_and_solution():
         'puzzle': [[0] * 9 for _ in range(9)],
         'solution': [[1] * 9 for _ in range(9)],
     }
+
+
+@pytest.mark.parametrize('difficulty, clues', DIFFICULTY_CLUES.items())
+def test_create_game_uses_configured_difficulty_clues(difficulty, clues):
+    class RecordingGenerator:
+        def generate_puzzle(self, received_clues):
+            assert received_clues == clues
+            return [[0] * 9 for _ in range(9)], [[1] * 9 for _ in range(9)]
+
+    service = SudokuGameService(RecordingGenerator())
+
+    service.create_game(difficulty=difficulty)
 
 
 def test_check_board_returns_incorrect_coordinates():

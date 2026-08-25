@@ -1,9 +1,17 @@
+from sudoku.constants import DIFFICULTY_CLUES
+
+
 class SudokuGameService:
     def __init__(self, generator, solver=None):
         self.generator = generator
         self.solver = solver
 
-    def create_game(self, clues):
+    def create_game(self, clues=None, difficulty='medium'):
+        if clues is None:
+            try:
+                clues = DIFFICULTY_CLUES[difficulty]
+            except (KeyError, TypeError):
+                raise ValueError('Difficulty must be easy, medium, or hard')
         if type(clues) is not int or not 1 <= clues <= 81:
             raise ValueError('Clues must be an integer between 1 and 81')
 

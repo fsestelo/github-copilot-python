@@ -1,6 +1,9 @@
 import random
 
+import pytest
+
 from sudoku.board import create_empty_board
+from sudoku.constants import DIFFICULTY_CLUES
 from sudoku.generator import generate_puzzle, remove_cells
 from sudoku.solver import count_solutions, fill_board
 
@@ -55,3 +58,14 @@ def test_generated_puzzle_has_exactly_one_solution():
     assert_valid_solution(solution)
     assert count_solutions(puzzle) == 1
     assert sum(cell != 0 for row in puzzle for cell in row) == 30
+
+
+@pytest.mark.parametrize('difficulty, clues', DIFFICULTY_CLUES.items())
+def test_difficulty_clues_generate_unique_puzzles(difficulty, clues):
+    random.seed(clues)
+
+    puzzle, solution = generate_puzzle(clues=clues)
+
+    assert_valid_solution(solution)
+    assert sum(cell != 0 for row in puzzle for cell in row) == clues
+    assert count_solutions(puzzle) == 1

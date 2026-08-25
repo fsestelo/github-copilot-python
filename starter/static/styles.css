@@ -11,9 +11,18 @@ h1 {
     color: #333;
 }
 
+.game-layout {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) auto minmax(180px, 1fr);
+    align-items: center;
+    gap: 24px;
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
 #sudoku-board {
     display: inline-block;
-    margin: 30px auto;
     border: 4px solid #333;
     background: #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -59,12 +68,31 @@ h1 {
 }
 
 .controls {
-    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+}
+
+.controls-left {
+    text-align: left;
+}
+
+.controls-right {
+    text-align: right;
+}
+
+.controls label {
+    font-weight: bold;
+}
+
+select {
+    padding: 8px;
+    font-size: 16px;
 }
 
 button {
     padding: 8px 18px;
-    margin: 0 8px;
     font-size: 16px;
     border: none;
     background: #1976d2;
@@ -79,7 +107,31 @@ button:hover {
 }
 
 #message {
-    margin-left: 20px;
     font-size: 16px;
     color: #d32f2f;
+}
+
+@media (max-width: 760px) {
+    .game-layout {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 20px;
+    }
+
+    .controls {
+        width: min(280px, 100%);
+        text-align: center;
+    }
+
+    #sudoku-board {
+        grid-row: 2;
+    }
+
+    .controls-left {
+        grid-row: 1;
+    }
+
+    .controls-right {
+        grid-row: 3;
+    }
 }

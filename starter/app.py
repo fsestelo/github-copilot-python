@@ -22,13 +22,15 @@ def index():
 @app.route('/new')
 def new_game():
     try:
-        clues = int(request.args.get('clues', 35))
-    except (TypeError, ValueError):
-        return jsonify({'error': 'Clues must be an integer between 1 and 81'}), 400
-    try:
-        game = service.create_game(clues)
+        clues_argument = request.args.get('clues')
+        clues = int(clues_argument) if clues_argument is not None else None
+        difficulty = request.args.get('difficulty', 'medium')
+        game = service.create_game(clues=clues, difficulty=difficulty)
     except ValueError as error:
-        return jsonify({'error': str(error)}), 400
+        message = str(error)
+        if clues_argument is not None and message.startswith('invalid literal'):
+            message = 'Clues must be an integer between 1 and 81'
+        return jsonify({'error': message}), 400
     CURRENT['puzzle'] = game['puzzle']
     CURRENT['solution'] = game['solution']
     return jsonify({'puzzle': game['puzzle']})
