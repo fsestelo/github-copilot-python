@@ -1,7 +1,7 @@
 import pytest
 
 import app
-import sudoku_logic
+from sudoku.constants import SIZE
 
 
 @pytest.fixture
@@ -23,8 +23,8 @@ def test_index_renders_game_page(client):
 
 
 def test_new_game_returns_puzzle_and_stores_solution(client, monkeypatch):
-    puzzle = [[0] * sudoku_logic.SIZE for _ in range(sudoku_logic.SIZE)]
-    solution = [[1] * sudoku_logic.SIZE for _ in range(sudoku_logic.SIZE)]
+    puzzle = [[0] * SIZE for _ in range(SIZE)]
+    solution = [[1] * SIZE for _ in range(SIZE)]
 
     def fake_generate_puzzle(clues):
         assert clues == 40
@@ -55,7 +55,7 @@ def test_check_solution_reports_no_game_in_progress(client):
 
 
 def test_check_solution_reports_coordinates_that_differ(client):
-    solution = [[1] * sudoku_logic.SIZE for _ in range(sudoku_logic.SIZE)]
+    solution = [[1] * SIZE for _ in range(SIZE)]
     board = [row[:] for row in solution]
     board[0][1] = 2
     app.CURRENT["solution"] = solution
@@ -67,7 +67,7 @@ def test_check_solution_reports_coordinates_that_differ(client):
 
 
 def test_check_solution_rejects_invalid_json(client):
-    app.CURRENT["solution"] = [[1] * sudoku_logic.SIZE for _ in range(sudoku_logic.SIZE)]
+    app.CURRENT["solution"] = [[1] * SIZE for _ in range(SIZE)]
 
     response = client.post(
         "/check",
@@ -80,7 +80,7 @@ def test_check_solution_rejects_invalid_json(client):
 
 
 def test_check_solution_rejects_missing_board(client):
-    app.CURRENT["solution"] = [[1] * sudoku_logic.SIZE for _ in range(sudoku_logic.SIZE)]
+    app.CURRENT["solution"] = [[1] * SIZE for _ in range(SIZE)]
 
     response = client.post("/check", json={})
 
@@ -92,13 +92,13 @@ def test_check_solution_rejects_missing_board(client):
     "board",
     [
         [],
-        [[0] * sudoku_logic.SIZE for _ in range(8)],
-        [[0] * 8 for _ in range(sudoku_logic.SIZE)],
-        [[10] + [0] * 8] + [[0] * sudoku_logic.SIZE for _ in range(8)],
+        [[0] * SIZE for _ in range(8)],
+        [[0] * 8 for _ in range(SIZE)],
+        [[10] + [0] * 8] + [[0] * SIZE for _ in range(8)],
     ],
 )
 def test_check_solution_rejects_invalid_board(client, board):
-    app.CURRENT["solution"] = [[1] * sudoku_logic.SIZE for _ in range(sudoku_logic.SIZE)]
+    app.CURRENT["solution"] = [[1] * SIZE for _ in range(SIZE)]
 
     response = client.post("/check", json={"board": board})
 
