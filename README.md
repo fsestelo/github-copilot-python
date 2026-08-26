@@ -58,3 +58,18 @@ Use GitHub Copilot to refactor the code for this game to add more advanced featu
 - The game should be responsive and work well on both desktop and mobile devices.
 - UI colors should be visually appealing and accessible.
 - Completed and correct puzzles should display a congratulatory message with the time taken and hints used and ask for the user's name for Top 10 times.
+
+---
+
+# Certificate
+
+This project was completed as part of the Udacity GitHub Copilot with Python.
+
+Certificate of Completion
+
+<p align="center"> <img src="certificate\GitHub_Copilot_with_Python_Certificate.png" alt="Udacity Certificate" width="800"> </p>
+
+Credential:
+www.udacity.com/certificate/e/5f4e3536-9b5d-11f1-94a8-f3d3cda37cfe
+
+---
