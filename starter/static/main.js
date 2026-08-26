@@ -1,10 +1,34 @@
 // Client-side rendering and interaction for the Flask-backed Sudoku
 const SIZE = 9;
+const THEME_STORAGE_KEY = 'sudoku-theme';
 let puzzle = [];
 let hintsUsed = 0;
 let timerInterval = null;
 let startedAt = null;
 let scoreSaved = false;
+
+function applyTheme(theme) {
+  const activeTheme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = activeTheme;
+  const toggle = document.getElementById('theme-toggle');
+  if (toggle) {
+    const darkMode = activeTheme === 'dark';
+    toggle.setAttribute('aria-pressed', String(darkMode));
+    toggle.innerText = darkMode ? 'Light mode' : 'Dark mode';
+  }
+}
+
+function restoreTheme() {
+  applyTheme(window.localStorage.getItem(THEME_STORAGE_KEY));
+}
+
+function toggleTheme() {
+  const nextTheme = document.documentElement.dataset.theme === 'dark'
+    ? 'light'
+    : 'dark';
+  applyTheme(nextTheme);
+  window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+}
 
 function formatElapsedTime(totalSeconds) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -127,7 +151,7 @@ async function checkSolution() {
   const data = await res.json();
   const msg = document.getElementById('message');
   if (data.error) {
-    msg.style.color = '#d32f2f';
+    msg.style.color = 'var(--error)';
     msg.innerText = data.error;
     return;
   }
@@ -145,10 +169,10 @@ async function checkSolution() {
       stopTimer(data.final_elapsed_seconds);
       saveCompletedGame(data.final_elapsed_seconds);
     }
-    msg.style.color = '#388e3c';
+    msg.style.color = 'var(--success)';
     msg.innerText = 'Congratulations! You solved it!';
   } else {
-    msg.style.color = '#d32f2f';
+    msg.style.color = 'var(--error)';
     msg.innerText = 'Some cells are incorrect.';
   }
 }
@@ -175,7 +199,7 @@ async function requestHint() {
   const data = await res.json();
   const msg = document.getElementById('message');
   if (data.error) {
-    msg.style.color = '#d32f2f';
+    msg.style.color = 'var(--error)';
     msg.innerText = data.error;
     return;
   }
@@ -185,12 +209,14 @@ async function requestHint() {
   input.disabled = true;
   input.className = 'sudoku-cell hint';
   hintsUsed++;
-  msg.style.color = '#388e3c';
+  msg.style.color = 'var(--success)';
   msg.innerText = `Hint used: ${hintsUsed}`;
 }
 
 // Wire buttons
 window.addEventListener('load', () => {
+  restoreTheme();
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
   document.getElementById('new-game').addEventListener('click', newGame);
   document.getElementById('hint').addEventListener('click', requestHint);
   document.getElementById('check-solution').addEventListener('click', checkSolution);
