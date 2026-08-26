@@ -54,6 +54,51 @@ function setNoteMode(active) {
   toggle.innerText = `Note Mode: ${noteMode ? 'On' : 'Off'}`;
 }
 
+function getCellValue(inputs, cellIndex, noteState = notes) {
+  const selectedNotes = getSelectedNotes(noteState, cellIndex);
+  if (selectedNotes.length >= 2) return 0;
+  if (selectedNotes.length === 1) return selectedNotes[0];
+  return inputs[cellIndex].value ? parseInt(inputs[cellIndex].value, 10) : 0;
+}
+
+function getConflictingCells(row, col, value, inputs, noteState = notes) {
+  if (!Number.isInteger(value) || value < 1 || value > SIZE) return new Set();
+  const conflicts = new Set();
+  for (let index = 0; index < SIZE * SIZE; index++) {
+    const otherRow = Math.floor(index / SIZE);
+    const otherCol = index % SIZE;
+    const sameRow = otherRow === row;
+    const sameColumn = otherCol === col;
+    const sameBlock = Math.floor(otherRow / 3) === Math.floor(row / 3)
+      && Math.floor(otherCol / 3) === Math.floor(col / 3);
+    if (index !== row * SIZE + col && (sameRow || sameColumn || sameBlock)
+      && getCellValue(inputs, index, noteState) === value) {
+      conflicts.add(index);
+    }
+  }
+  return conflicts;
+}
+
+function checkConflict(row, col, value, inputs, noteState = notes) {
+  const cells = inputs || document.getElementById('sudoku-board').getElementsByTagName('input');
+  const invalidCells = new Set();
+  for (let index = 0; index < SIZE * SIZE; index++) {
+    const cellValue = getCellValue(cells, index, noteState);
+    if (!cellValue) continue;
+    const cellRow = Math.floor(index / SIZE);
+    const cellCol = index % SIZE;
+    getConflictingCells(cellRow, cellCol, cellValue, cells, noteState)
+      .forEach((conflict) => {
+        invalidCells.add(index);
+        invalidCells.add(conflict);
+      });
+  }
+  for (let index = 0; index < cells.length; index++) {
+    cells[index].parentElement.classList.toggle('invalid-entry', invalidCells.has(index));
+  }
+  return !getConflictingCells(row, col, value, cells, noteState).size;
+}
+
 function handleCellInput(input) {
   const value = input.value.replace(/[^1-9]/g, '').slice(0, 1);
   input.value = value;
@@ -65,6 +110,8 @@ function handleCellInput(input) {
   }
   if (value) clearCellNotes(notes, cellIndex);
   renderCellNotes(input, cellIndex);
+  checkConflict(Number(input.dataset.row), Number(input.dataset.col), Number(value),
+    input.parentElement.parentElement.parentElement.getElementsByTagName('input'));
 }
 
 function applyTheme(theme) {
@@ -320,5 +367,12 @@ if (typeof window !== 'undefined') {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = {createNotes, toggleNote, clearCellNotes, getCurrentBoard};
+  module.exports = {
+    createNotes,
+    toggleNote,
+    clearCellNotes,
+    getCurrentBoard,
+    getConflictingCells,
+    checkConflict,
+  };
 }

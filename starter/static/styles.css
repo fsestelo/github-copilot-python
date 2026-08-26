@@ -10,6 +10,7 @@
     --focus: #e0f7fa;
     --hint: #856404;
     --incorrect: #ffcdd2;
+    --invalid-outline: #b71c1c;
     --error: #d32f2f;
     --success: #388e3c;
     --button: #1976d2;
@@ -29,6 +30,7 @@
     --focus: #14515c;
     --hint: #ffd166;
     --incorrect: #6b343b;
+    --invalid-outline: #ff8a8a;
     --error: #ff8a8a;
     --success: #75d69a;
     --button: #3182ce;
@@ -132,7 +134,7 @@ h1 {
 }
 
 .sudoku-cell:focus-within {
-    background: var(--focus);
+    box-shadow: 0 0 0 2px var(--focus);
 }
 
 .sudoku-row:nth-child(-n + 3),
@@ -167,6 +169,16 @@ h1 {
 
 .sudoku-cell.incorrect {
     background: var(--incorrect);
+}
+
+.sudoku-cell.invalid-entry {
+    outline: 3px solid var(--invalid-outline);
+    outline-offset: -3px;
+}
+
+.sudoku-value:focus-visible {
+    outline: 2px solid var(--border);
+    outline-offset: -4px;
 }
 
 .sudoku-cell:nth-child(3),
