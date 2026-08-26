@@ -6,6 +6,66 @@ let hintsUsed = 0;
 let timerInterval = null;
 let startedAt = null;
 let scoreSaved = false;
+let notes = createNotes();
+let noteMode = false;
+
+function createNotes() {
+  return Array.from({length: SIZE * SIZE}, () => new Set());
+}
+
+function toggleNote(noteState, cellIndex, value, locked = false) {
+  if (locked) return;
+  if (!Number.isInteger(value) || value < 1 || value > 9) return;
+  if (noteState[cellIndex].has(value)) {
+    noteState[cellIndex].delete(value);
+  } else {
+    noteState[cellIndex].add(value);
+  }
+}
+
+function clearCellNotes(noteState, cellIndex) {
+  noteState[cellIndex].clear();
+}
+
+function getSelectedNotes(noteState, cellIndex) {
+  return [...noteState[cellIndex]].sort((first, second) => first - second);
+}
+
+function renderCellNotes(input, cellIndex, noteState = notes) {
+  const selectedNotes = getSelectedNotes(noteState, cellIndex);
+  if (selectedNotes.length === 1) {
+    input.value = selectedNotes[0];
+  } else if (selectedNotes.length >= 2 || noteMode) {
+    input.value = '';
+  }
+  const noteElements = input.parentElement.querySelectorAll('[data-note]');
+  noteElements.forEach((noteElement) => {
+    const value = Number(noteElement.dataset.note);
+    noteElement.innerText = selectedNotes.length >= 2 && selectedNotes.includes(value)
+      ? value
+      : '';
+  });
+}
+
+function setNoteMode(active) {
+  noteMode = active;
+  const toggle = document.getElementById('note-mode');
+  toggle.setAttribute('aria-pressed', String(noteMode));
+  toggle.innerText = `Note Mode: ${noteMode ? 'On' : 'Off'}`;
+}
+
+function handleCellInput(input) {
+  const value = input.value.replace(/[^1-9]/g, '').slice(0, 1);
+  input.value = value;
+  const cellIndex = Number(input.dataset.index);
+  if (noteMode) {
+    if (value) toggleNote(notes, cellIndex, Number(value), input.disabled);
+    renderCellNotes(input, cellIndex);
+    return;
+  }
+  if (value) clearCellNotes(notes, cellIndex);
+  renderCellNotes(input, cellIndex);
+}
 
 function applyTheme(theme) {
   const activeTheme = theme === 'dark' ? 'dark' : 'light';
@@ -90,17 +150,36 @@ function createBoardElement() {
     const rowDiv = document.createElement('div');
     rowDiv.className = 'sudoku-row';
     for (let j = 0; j < SIZE; j++) {
+        const cell = document.createElement('div');
+        cell.className = 'sudoku-cell';
+        cell.dataset.row = i;
+        cell.dataset.col = j;
       const input = document.createElement('input');
       input.type = 'text';
       input.maxLength = 1;
-      input.className = 'sudoku-cell';
+        input.className = 'sudoku-value';
       input.dataset.row = i;
       input.dataset.col = j;
-      input.addEventListener('input', (e) => {
-        const val = e.target.value.replace(/[^1-9]/g, '');
-        e.target.value = val;
-      });
-      rowDiv.appendChild(input);
+        input.dataset.index = i * SIZE + j;
+        input.setAttribute('aria-label', `Row ${i + 1}, column ${j + 1}`);
+          input.addEventListener('keydown', (event) => {
+            if (!noteMode || input.disabled || !/^[1-9]$/.test(event.key)) return;
+            event.preventDefault();
+            toggleNote(notes, Number(input.dataset.index), Number(event.key));
+            renderCellNotes(input, Number(input.dataset.index));
+          });
+        input.addEventListener('input', () => handleCellInput(input));
+        cell.appendChild(input);
+        const noteGrid = document.createElement('span');
+        noteGrid.className = 'sudoku-notes';
+        noteGrid.setAttribute('aria-hidden', 'true');
+        for (let value = 1; value <= SIZE; value++) {
+          const note = document.createElement('span');
+          note.dataset.note = value;
+          noteGrid.appendChild(note);
+        }
+        cell.appendChild(noteGrid);
+        rowDiv.appendChild(cell);
     }
     boardDiv.appendChild(rowDiv);
   }
@@ -108,6 +187,7 @@ function createBoardElement() {
 
 function renderPuzzle(puz) {
   puzzle = puz;
+  notes = createNotes();
   hintsUsed = 0;
   scoreSaved = false;
   createBoardElement();
@@ -118,14 +198,17 @@ function renderPuzzle(puz) {
       const idx = i * SIZE + j;
       const val = puzzle[i][j];
       const inp = inputs[idx];
+      const cell = inp.parentElement;
       if (val !== 0) {
         inp.value = val;
         inp.disabled = true;
-        inp.className += ' prefilled';
+        cell.className = 'sudoku-cell prefilled';
       } else {
         inp.value = '';
         inp.disabled = false;
+        cell.className = 'sudoku-cell';
       }
+      renderCellNotes(inp, idx);
     }
   }
 }
@@ -158,10 +241,11 @@ async function checkSolution() {
   const incorrect = new Set(data.incorrect.map(x => x[0]*SIZE + x[1]));
   for (let idx = 0; idx < inputs.length; idx++) {
     const inp = inputs[idx];
+    const cell = inp.parentElement;
     if (inp.disabled) continue;
-    inp.className = 'sudoku-cell';
+    cell.className = 'sudoku-cell';
     if (incorrect.has(idx)) {
-      inp.className = 'sudoku-cell incorrect';
+      cell.className = 'sudoku-cell incorrect';
     }
   }
   if (incorrect.size === 0) {
@@ -177,13 +261,19 @@ async function checkSolution() {
   }
 }
 
-function getCurrentBoard(inputs) {
+function getCurrentBoard(inputs, noteState = notes) {
   const board = [];
   for (let i = 0; i < SIZE; i++) {
     board[i] = [];
     for (let j = 0; j < SIZE; j++) {
+      const cellIndex = i * SIZE + j;
       const input = inputs[i * SIZE + j];
-      board[i][j] = input.value ? parseInt(input.value, 10) : 0;
+      const selectedNotes = getSelectedNotes(noteState, cellIndex);
+      board[i][j] = selectedNotes.length >= 2
+        ? 0
+        : selectedNotes.length === 1
+          ? selectedNotes[0]
+          : (input.value ? parseInt(input.value, 10) : 0);
     }
   }
   return board;
@@ -205,22 +295,30 @@ async function requestHint() {
   }
 
   const input = inputs[data.row * SIZE + data.column];
+  const cellIndex = data.row * SIZE + data.column;
+  clearCellNotes(notes, cellIndex);
+  renderCellNotes(input, cellIndex);
   input.value = data.value;
   input.disabled = true;
-  input.className = 'sudoku-cell hint';
+  input.parentElement.className = 'sudoku-cell hint';
   hintsUsed++;
   msg.style.color = 'var(--success)';
   msg.innerText = `Hint used: ${hintsUsed}`;
 }
 
-// Wire buttons
-window.addEventListener('load', () => {
-  restoreTheme();
-  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-  document.getElementById('new-game').addEventListener('click', newGame);
-  document.getElementById('hint').addEventListener('click', requestHint);
-  document.getElementById('check-solution').addEventListener('click', checkSolution);
-  renderScoreboard(Scoreboard.loadScores(window.localStorage));
-  // initialize
-  newGame();
-});
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    restoreTheme();
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+    document.getElementById('new-game').addEventListener('click', newGame);
+    document.getElementById('hint').addEventListener('click', requestHint);
+    document.getElementById('check-solution').addEventListener('click', checkSolution);
+    document.getElementById('note-mode').addEventListener('click', () => setNoteMode(!noteMode));
+    renderScoreboard(Scoreboard.loadScores(window.localStorage));
+    newGame();
+  });
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = {createNotes, toggleNote, clearCellNotes, getCurrentBoard};
+}

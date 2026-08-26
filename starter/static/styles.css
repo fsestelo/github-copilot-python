@@ -87,6 +87,7 @@ h1 {
 }
 
 .sudoku-cell {
+    position: relative;
     width: 0;
     height: auto;
     aspect-ratio: 1;
@@ -99,6 +100,39 @@ h1 {
     background: var(--block-background, var(--cell-background));
     color: var(--text);
     transition: background 0.2s;
+}
+
+.sudoku-value {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-align: center;
+    font: inherit;
+    outline: none;
+    background: transparent;
+    color: inherit;
+    z-index: 1;
+}
+
+.sudoku-notes {
+    position: absolute;
+    inset: 2px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    align-items: center;
+    justify-items: center;
+    font-size: clamp(7px, 1.8vw, 11px);
+    line-height: 1;
+    color: var(--text);
+}
+
+.sudoku-cell:focus-within {
+    background: var(--focus);
 }
 
 .sudoku-row:nth-child(-n + 3),
@@ -117,10 +151,6 @@ h1 {
 
 .sudoku-row:nth-child(n + 4):nth-child(-n + 6) .sudoku-cell:nth-child(n + 4):nth-child(-n + 6) {
     --block-background: var(--block-a);
-}
-
-.sudoku-cell:focus {
-    background: var(--focus);
 }
 
 .sudoku-cell.prefilled {
