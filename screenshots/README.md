@@ -216,6 +216,7 @@ The pattern is:
 A B A
 B A B
 A B A
+```
 
 ---
 
