@@ -217,9 +217,11 @@ A B A
 B A B
 A B A
 
+---
+
 ### 023 — Dark Mode
 
-**Screenshot:** `023_copilot_dark_mode_prompt.png`
+`023_copilot_dark_mode_prompt.png`
 
 This screenshot documents the implementation of the Dark Mode feature.
 
@@ -231,10 +233,20 @@ The Dark Mode also preserves the alternating 3×3 Sudoku block colors and the vi
 
 ### 024 — Responsive Layout
 
-**Screenshot:** `024_copilot_responsive_layout_prompt.png`
+`024_copilot_responsive_layout_prompt.png`
 
 This screenshot documents the implementation of the responsive layout.
 
 The Sudoku interface was adapted for both desktop and mobile screen sizes. The board, controls, timer, difficulty selector, theme toggle, and Top 10 scoreboard adapt to smaller viewports while avoiding horizontal scrolling.
 
 The existing Sudoku functionality and visual design are preserved across different screen sizes.
+
+---
+
+### 025 — Note Mode
+
+`025_copilot_note_mode_prompt.png`
+
+This screenshot documents the implementation of the Sudoku Note Mode feature.
+
+Note Mode allows players to record possible numbers in a cell using a 3×3 mini-grid. A single selected number is treated as the main value of the cell, while multiple selected numbers are displayed as candidate notes.
