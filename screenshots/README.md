@@ -251,3 +251,13 @@ The existing Sudoku functionality and visual design are preserved across differe
 This screenshot documents the implementation of the Sudoku Note Mode feature.
 
 Note Mode allows players to record possible numbers in a cell using a 3×3 mini-grid. A single selected number is treated as the main value of the cell, while multiple selected numbers are displayed as candidate notes.
+
+---
+
+### 026 — Invalid Move Feedback
+
+`026_copilot_invalid_move_prompt.png`
+
+This screenshot documents the implementation of immediate invalid-move feedback.
+
+When a player enters a number that conflicts with an existing number in the same row, column, or 3×3 block, the conflicting cells are highlighted immediately.
